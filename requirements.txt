@@ -1,0 +1,6 @@
+ExifRead==3.0.0
+Flask==3.0.3
+pillow 
+pyinstaller==5.13.0
+pyinstaller-hooks-contrib==2025.5
+chardet==5.2.0

@@ -1,0 +1,42 @@
+/* Custom Scrollbar for better UI experience */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Base styles for canvas to ensure it fills its parent container */
+#image-canvas {
+    background-color: #eee; /* Light gray background for canvas itself */
+    display: block; /* Remove extra space below canvas */
+    /* width and height are set by script.js using style.width/height */
+    cursor: crosshair; /* Change cursor to crosshair on canvas */
+}
+
+/* CSS for the message box animation */
+#message-box {
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%) scale(0.9); /* Initially smaller and centered */
+    opacity: 0;
+    transition: all 0.2s ease-out; /* Faster transition for appearing */
+    pointer-events: none; /* Allow clicks to pass through when hidden */
+}
+#message-box.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1); /* Full size when shown */
+    pointer-events: auto; /* Enable clicks when shown (if it were interactive) */
+}
+
