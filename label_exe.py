@@ -12,6 +12,7 @@ from itertools import islice
 from path_select import select_directory
 import threading
 import sys
+import random
 
 # 全局配置
 FOLDER_PATH = ""
@@ -207,6 +208,30 @@ def parse_coordinate_line(line):
 def index():
     """根路由，提供HTML页面"""
     return send_from_directory('static', 'index.html')
+
+
+@app.route('/api/process_rectangle', methods=['POST'])
+def process_rectangle():
+    data = request.get_json()
+    rectangle = data.get('rectangle')
+    if not rectangle:
+        return jsonify({'error': 'Invalid rectangle data'}), 400
+
+    # 提取矩形的角点
+    corners = [
+        [rectangle[0][0], rectangle[0][1], 1],
+        [rectangle[1][0], rectangle[0][1], 2],
+        [rectangle[1][0], rectangle[1][1], 3],
+        [rectangle[0][0], rectangle[1][1], 4]
+    ]
+
+    # 打乱角点顺序
+    random.shuffle(corners)
+
+    return jsonify(corners)
+
+
+
 
 @app.route('/api/images')
 def get_image_list():
