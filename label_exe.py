@@ -16,7 +16,7 @@ import random
 import get_cheese_point as gp
 import cv2 
 import numpy as np
-
+import json
 img_path_global = ""
 
 # 从图片数据中提取参数（使用优化后的值）
@@ -245,16 +245,60 @@ def process_rectangle():
         [rectangle[0][0], rectangle[1][1]]
     ]
     global img_path_global  # 使用全局变量
-    image_path = img_path_global  # 替换为实际图像路径
+    image_path = img_path_global  # 当前处理的图像路径
+    
+    # 检查图像路径是否有效
+    if not image_path or not os.path.exists(image_path):
+        return jsonify({'error': '无效的图像路径'}), 400
+    
+    # 创建JSON文件路径（与图像同名但扩展名为.json）
+    json_path = os.path.splitext(image_path)[0] + '.json'
+    
+    # 保存矩形数据到JSON文件（追加而不是覆盖）
+    try:
+        # 如果文件已存在，读取现有数据
+        existing_data = []
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, 'r') as f:
+                    existing_data = json.load(f)
+                    if not isinstance(existing_data, list):
+                        existing_data = [existing_data]  # 如果数据不是列表，转换为列表
+            except json.JSONDecodeError:
+                print(f"警告: JSON文件 {json_path} 格式无效，将创建新文件")
+                existing_data = []
+        
+        # 创建新的矩形数据
+        new_rectangle = {
+            "corners": corners,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+    except Exception as e:
+        print(f"保存矩形数据到JSON文件时出错: {e}")
+        return jsonify({'error': f'保存矩形数据失败: {str(e)}'}), 500
+
+    # 处理图像并检测点
     img = cv2.imread(image_path)
     if img is None:
-        raise ValueError("无法读取图像，请检查路径")
-    undistorted = cv2.undistort(img, cam_matrix, dist_coeffs)
-    # processed_img = gp.replace_background_with_green(undistorted)
-    # 自动检测9个点
-    detected_points = gp.auto_detect_corners(undistorted, corners)
-    ans_point = detected_points.tolist()
-    return jsonify(ans_point)
+        return jsonify({'error': '无法读取图像，请检查路径'}), 400
+    
+    try:
+        undistorted = cv2.undistort(img, cam_matrix, dist_coeffs)
+        detected_points = gp.auto_detect_corners(undistorted, corners)
+        ans_point = detected_points.tolist()
+        # 将新数据添加到现有数据中
+        existing_data.append(new_rectangle)
+        
+        # 保存更新后的数据
+        with open(json_path, 'w') as f:
+            json.dump(existing_data, f, indent=4)
+        
+        print(f"已将矩形数据追加到: {json_path} (当前矩形数: {len(existing_data)})")
+        return jsonify(ans_point)
+    except Exception as e:
+        print(f"处理矩形时出错: {e}")
+        return jsonify({'error': f'处理矩形时出错: {str(e)}'}), 500
 
 
 @app.route('/api/images')
