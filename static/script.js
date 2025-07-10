@@ -188,7 +188,7 @@ async function saveCoordinates() {
         if (result.error) {
             throw new Error(result.error);
         }
-        showMessage(result.message, 'success');
+        // showMessage(result.message, 'success');
     } catch (error) {
         showMessage(`保存坐标失败: ${error.message}`, 'error');
         console.error('Error saving coordinates:', error);
@@ -397,7 +397,7 @@ canvas.addEventListener('mousedown', async (event) => {
             imgY >= 0 && imgY < originalImageDimensions.height) {
             const targetNumber = prompt('请输入靶标编号 (数字):');
             if (targetNumber === null) {
-                showMessage('标注已取消', 'info');
+                // showMessage('标注已取消', 'info');
                 return;
             }
             const targetNum = parseInt(targetNumber);
@@ -412,7 +412,7 @@ canvas.addEventListener('mousedown', async (event) => {
             drawAnnotations();
             await saveCoordinates();
             updateUI();
-            showMessage(`坐标已记录: X ${imgX}, Y ${imgY}, 靶标 ${targetNum}`, 'success');
+            // showMessage(`坐标已记录: X ${imgX}, Y ${imgY}, 靶标 ${targetNum}`, 'success');
         } else {
             showMessage('点击位置超出图片边界。', 'info');
         }

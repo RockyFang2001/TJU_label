@@ -168,7 +168,7 @@ def write_text_file(txt_file_path, header, coordinates):
                         f.write(f"靶标 {int(coord[2])}: x {int(coord[0])} y {int(coord[1])}\n")
                     else:
                         f.write(f"x {int(coord[0])} y {int(coord[1])}\n")
-        print(f"Debug: 已将坐标保存到 {txt_file_path}。写入的数据: {valid_coords_to_write if valid_coords_to_write else '[None]'}")
+        # print(f"Debug: 已将坐标保存到 {txt_file_path}。写入的数据: {valid_coords_to_write if valid_coords_to_write else '[None]'}")
     except Exception as e:
         print(f"写入文本文件 {txt_file_path} 时出错: {e}")
 
