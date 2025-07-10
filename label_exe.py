@@ -250,9 +250,9 @@ def process_rectangle():
     if img is None:
         raise ValueError("无法读取图像，请检查路径")
     undistorted = cv2.undistort(img, cam_matrix, dist_coeffs)
-    processed_img = gp.replace_background_with_green(undistorted)
+    # processed_img = gp.replace_background_with_green(undistorted)
     # 自动检测9个点
-    detected_points = gp.auto_detect_corners(processed_img, corners)
+    detected_points = gp.auto_detect_corners(undistorted, corners)
     ans_point = detected_points.tolist()
     return jsonify(ans_point)
 

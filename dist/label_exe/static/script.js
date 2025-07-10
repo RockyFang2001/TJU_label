@@ -278,58 +278,59 @@ async function navigateImage_prevBtn(delta) {
 }
 
 // 下一张图像导航函数，显示模态框确认
-async function navigateImage_nextBtn(delta) {
-    const elementCount = {};
-    coordinates.forEach(coord => {
-        if (coord && typeof coord[2] === 'number') {
-            const element = coord[2];
-            elementCount[element] = (elementCount[element] || 0) + 1;
-        }
-    });
+// async function navigateImage_nextBtn(delta) {
+//     const elementCount = {};
+//     coordinates.forEach(coord => {
+//         if (coord && typeof coord[2] === 'number') {
+//             const element = coord[2];
+//             elementCount[element] = (elementCount[element] || 0) + 1;
+//         }
+//     });
 
-    const modal = document.createElement('div');
-    modal.classList.add('fixed', 'top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2', 'bg-white', 'p-6', 'rounded-lg', 'shadow-lg', 'z-50', 'transform', 'opacity-0', 'transition-all', 'duration-300', 'ease-out');
+//     const modal = document.createElement('div');
+//     modal.classList.add('fixed', 'top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2', 'bg-white', 'p-6', 'rounded-lg', 'shadow-lg', 'z-50', 'transform', 'opacity-0', 'transition-all', 'duration-300', 'ease-out');
 
-    const content = document.createElement('div');
-    for (const [element, count] of Object.entries(elementCount)) {
-        const p = document.createElement('p');
-        p.textContent = `靶标${element}, 标注数量 ${count}`;
-        p.classList.add('mb-2', 'text-gray-700');
-        content.appendChild(p);
-    }
-    modal.appendChild(content);
+//     const content = document.createElement('div');
+//     for (const [element, count] of Object.entries(elementCount)) {
+//         const p = document.createElement('p');
+//         p.textContent = `靶标${element}, 标注数量 ${count}`;
+//         p.classList.add('mb-2', 'text-gray-700');
+//         content.appendChild(p);
+//     }
+//     modal.appendChild(content);
 
-    const buttonContainer = document.createElement('div');
-    buttonContainer.classList.add('flex', 'justify-end', 'mt-4');
+//     const buttonContainer = document.createElement('div');
+//     buttonContainer.classList.add('flex', 'justify-end', 'mt-4');
 
-    const confirmButton = document.createElement('button');
-    confirmButton.textContent = '确定';
-    confirmButton.classList.add('px-4', 'py-2', 'bg-green-500', 'text-white', 'rounded-md', 'mr-2', 'hover:bg-green-600', 'focus:outline-none', 'focus:ring-2', 'focus:ring-green-400', 'focus:ring-opacity-50');
-    confirmButton.addEventListener('click', async () => {
-        await saveCoordinates();
-        let nextIndex = currentIndex + delta;
-        if (nextIndex < 0) {
-            nextIndex = imageFiles.length - 1;
-        } else if (nextIndex >= imageFiles.length) {
-            nextIndex = 0;
-        }
-        coordinates = [];
-        await loadImage(nextIndex);
-        modal.remove();
-    });
-    buttonContainer.appendChild(confirmButton);
+//     const confirmButton = document.createElement('button');
+//     confirmButton.textContent = '确定';
+//     confirmButton.classList.add('px-4', 'py-2', 'bg-green-500', 'text-white', 'rounded-md', 'mr-2', 'hover:bg-green-600', 'focus:outline-none', 'focus:ring-2', 'focus:ring-green-400', 'focus:ring-opacity-50');
+//     confirmButton.addEventListener('click', async () => {
+//         await saveCoordinates();
+//         let nextIndex = currentIndex + delta;
+//         if (nextIndex < 0) {
+//             nextIndex = imageFiles.length - 1;
+//         } else if (nextIndex >= imageFiles.length) {
+//             nextIndex = 0;
+//         }
+//         coordinates = [];
+//         await loadImage(nextIndex);
+//         modal.remove();
+//     });
+//     buttonContainer.appendChild(confirmButton);
 
-    const cancelButton = document.createElement('button');
-    cancelButton.textContent = '取消';
-    cancelButton.classList.add('px-4', 'py-2', 'bg-red-500', 'text-white', 'rounded-md', 'hover:bg-red-600', 'focus:outline-none', 'focus:ring-2', 'focus:ring-red-400', 'focus:ring-opacity-50');
-    cancelButton.addEventListener('click', () => modal.remove());
-    buttonContainer.appendChild(cancelButton);
+//     const cancelButton = document.createElement('button');
+//     cancelButton.textContent = '取消';
+//     cancelButton.classList.add('px-4', 'py-2', 'bg-red-500', 'text-white', 'rounded-md', 'hover:bg-red-600', 'focus:outline-none', 'focus:ring-2', 'focus:ring-red-400', 'focus:ring-opacity-50');
+//     cancelButton.addEventListener('click', () => modal.remove());
+//     buttonContainer.appendChild(cancelButton);
 
-    modal.appendChild(buttonContainer);
-    document.body.appendChild(modal);
-    void modal.offsetWidth;
-    modal.classList.add('opacity-100');
-}
+//     modal.appendChild(buttonContainer);
+//     document.body.appendChild(modal);
+//     void modal.offsetWidth;
+//     modal.classList.add('opacity-100');
+// }
+
 // // 合并的鼠标按下事件处理器，处理左键标注和中键拖拽
 // canvas.addEventListener('mousedown', async (event) => {
 //     if (event.button === 1) { // 鼠标中键按钮代码为 1
@@ -702,7 +703,7 @@ document.addEventListener('contextmenu', function(event) {
 
 // 导航按钮事件
 prevBtn.addEventListener('click', () => navigateImage_prevBtn(-1));
-nextBtn.addEventListener('click', () => navigateImage_nextBtn(1));
+nextBtn.addEventListener('click', () => navigateImage_prevBtn(1));
 
 // 撤销按钮事件
 undoBtn.addEventListener('click', async () => {
