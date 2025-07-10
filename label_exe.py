@@ -13,6 +13,26 @@ from path_select import select_directory
 import threading
 import sys
 import random
+import get_cheese_point as gp
+import cv2 
+import numpy as np
+
+img_path_global = ""
+
+# 从图片数据中提取参数（使用优化后的值）
+cam_matrix = np.array([
+    [3700.086, 0, 2684.688],   # 焦距fx, 0, Cx
+    [0, 3700.086, 1960.197],    # 0, 焦距fy, Cy
+    [0, 0, 1]                   # 内参矩阵最后一行
+])
+
+dist_coeffs = np.array([
+    0.003998099,    # K1
+    -0.007239428,   # K2
+    0.000374241,    # P1
+    0.000162918,    # P2
+    0.002083274     # K3
+])
 
 # 全局配置
 FOLDER_PATH = ""
@@ -219,18 +239,22 @@ def process_rectangle():
 
     # 提取矩形的角点
     corners = [
-        [rectangle[0][0], rectangle[0][1], 1],
-        [rectangle[1][0], rectangle[0][1], 2],
-        [rectangle[1][0], rectangle[1][1], 3],
-        [rectangle[0][0], rectangle[1][1], 4]
+        [rectangle[0][0], rectangle[0][1]],
+        [rectangle[1][0], rectangle[0][1]],
+        [rectangle[1][0], rectangle[1][1]],
+        [rectangle[0][0], rectangle[1][1]]
     ]
-    
-    # 打乱角点顺序
-    random.shuffle(corners)
-
-    return jsonify(corners)
-
-
+    global img_path_global  # 使用全局变量
+    image_path = img_path_global  # 替换为实际图像路径
+    img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError("无法读取图像，请检查路径")
+    undistorted = cv2.undistort(img, cam_matrix, dist_coeffs)
+    processed_img = gp.replace_background_with_green(undistorted)
+    # 自动检测9个点
+    detected_points = gp.auto_detect_corners(processed_img, corners)
+    ans_point = detected_points.tolist()
+    return jsonify(ans_point)
 
 
 @app.route('/api/images')
@@ -264,7 +288,8 @@ def get_image_data(index):
         image_path = os.path.join(FOLDER_PATH, image_filename)
         base_name = os.path.splitext(image_filename)[0]
         txt_path = os.path.join(FOLDER_PATH, f"{base_name}.txt")
-
+        global img_path_global  # 使用全局变量
+        img_path_global = image_path  # 更新全局变量
         with Image.open(image_path) as img:
             original_width, original_height = img.size
             if img.mode != 'RGB':

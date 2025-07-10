@@ -1,0 +1,2 @@
+
+            isDrawingRectangle = true;
