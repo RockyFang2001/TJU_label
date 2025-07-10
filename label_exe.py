@@ -224,7 +224,7 @@ def process_rectangle():
         [rectangle[1][0], rectangle[1][1], 3],
         [rectangle[0][0], rectangle[1][1], 4]
     ]
-
+    
     # 打乱角点顺序
     random.shuffle(corners)
 
