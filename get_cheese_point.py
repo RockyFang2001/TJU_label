@@ -26,7 +26,7 @@ def replace_background_with_green(img):
     mask_white = cv2.inRange(hsv, lower_white, upper_white)
     
     lower_black = np.array([0, 0, 0])
-    upper_black = np.array([180, 255, 100])
+    upper_black = np.array([180, 255, 255])
     mask_black = cv2.inRange(hsv, lower_black, upper_black)
     
     mask_target = cv2.bitwise_or(mask_white, mask_black)
