@@ -186,9 +186,9 @@ def write_text_file(txt_file_path, header, coordinates):
             else:
                 for coord in valid_coords_to_write:
                     if len(coord) >= 3:
-                        f.write(f"靶标 {int(coord[2])}: x {int(coord[0])} y {int(coord[1])}\n")
+                        f.write(f"靶标 {coord[2]}: x {coord[0]} y {coord[1]}\n")
                     else:
-                        f.write(f"x {int(coord[0])} y {int(coord[1])}\n")
+                        f.write(f"x {coord[0]} y {coord[1]}\n")
         # print(f"Debug: 已将坐标保存到 {txt_file_path}。写入的数据: {valid_coords_to_write if valid_coords_to_write else '[None]'}")
     except Exception as e:
         print(f"写入文本文件 {txt_file_path} 时出错: {e}")
@@ -287,6 +287,7 @@ def process_rectangle():
         undistorted = cv2.undistort(img, cam_matrix, dist_coeffs)
         detected_points = gp.auto_detect_corners(undistorted, corners)
         ans_point = detected_points.tolist()
+        print(ans_point)
         # 将新数据添加到现有数据中
         existing_data.append(new_rectangle)
         
