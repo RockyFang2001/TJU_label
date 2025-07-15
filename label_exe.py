@@ -16,7 +16,7 @@ import random
 import get_cheese_point as gp
 import cv2 
 import numpy as np
-
+import json
 img_path_global = ""
 
 # 从图片数据中提取参数（使用优化后的值）
@@ -35,9 +35,9 @@ dist_coeffs = np.array([
 ])
 
 # 全局配置
-FOLDER_PATH = ""
-if not os.path.exists(FOLDER_PATH):
-    FOLDER_PATH = select_directory("请选择一个目录")
+FOLDER_PATH = "/media/fkr/TJU_AIR/changable/1"
+# if not os.path.exists(FOLDER_PATH):
+#     FOLDER_PATH = select_directory("请选择一个目录")
 
 # Flask应用设置
 if getattr(sys, 'frozen', False):
@@ -186,9 +186,9 @@ def write_text_file(txt_file_path, header, coordinates):
             else:
                 for coord in valid_coords_to_write:
                     if len(coord) >= 3:
-                        f.write(f"靶标 {int(coord[2])}: x {int(coord[0])} y {int(coord[1])}\n")
+                        f.write(f"靶标 {coord[2]}: x {coord[0]} y {coord[1]}\n")
                     else:
-                        f.write(f"x {int(coord[0])} y {int(coord[1])}\n")
+                        f.write(f"x {coord[0]} y {coord[1]}\n")
         # print(f"Debug: 已将坐标保存到 {txt_file_path}。写入的数据: {valid_coords_to_write if valid_coords_to_write else '[None]'}")
     except Exception as e:
         print(f"写入文本文件 {txt_file_path} 时出错: {e}")
@@ -205,8 +205,8 @@ def parse_coordinate_line(line):
         if x_val == "none" and y_val == "none":
             return None
         try:
-            x = int(x_val)
-            y = int(y_val)
+            x = np.float64(x_val)
+            y = np.float64(y_val)
             target_number = None
             if len(parts) >= 6:
                 try:
@@ -245,16 +245,61 @@ def process_rectangle():
         [rectangle[0][0], rectangle[1][1]]
     ]
     global img_path_global  # 使用全局变量
-    image_path = img_path_global  # 替换为实际图像路径
+    image_path = img_path_global  # 当前处理的图像路径
+    
+    # 检查图像路径是否有效
+    if not image_path or not os.path.exists(image_path):
+        return jsonify({'error': '无效的图像路径'}), 400
+    
+    # 创建JSON文件路径（与图像同名但扩展名为.json）
+    json_path = os.path.splitext(image_path)[0] + '.json'
+    
+    # 保存矩形数据到JSON文件（追加而不是覆盖）
+    try:
+        # 如果文件已存在，读取现有数据
+        existing_data = []
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, 'r') as f:
+                    existing_data = json.load(f)
+                    if not isinstance(existing_data, list):
+                        existing_data = [existing_data]  # 如果数据不是列表，转换为列表
+            except json.JSONDecodeError:
+                print(f"警告: JSON文件 {json_path} 格式无效，将创建新文件")
+                existing_data = []
+        
+        # 创建新的矩形数据
+        new_rectangle = {
+            "corners": corners,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+    except Exception as e:
+        print(f"保存矩形数据到JSON文件时出错: {e}")
+        return jsonify({'error': f'保存矩形数据失败: {str(e)}'}), 500
+
+    # 处理图像并检测点
     img = cv2.imread(image_path)
     if img is None:
-        raise ValueError("无法读取图像，请检查路径")
-    undistorted = cv2.undistort(img, cam_matrix, dist_coeffs)
-    processed_img = gp.replace_background_with_green(undistorted)
-    # 自动检测9个点
-    detected_points = gp.auto_detect_corners(processed_img, corners)
-    ans_point = detected_points.tolist()
-    return jsonify(ans_point)
+        return jsonify({'error': '无法读取图像，请检查路径'}), 400
+    
+    try:
+        undistorted = cv2.undistort(img, cam_matrix, dist_coeffs)
+        detected_points = gp.auto_detect_corners(undistorted, corners)
+        ans_point = detected_points.tolist()
+        print(ans_point)
+        # 将新数据添加到现有数据中
+        existing_data.append(new_rectangle)
+        
+        # 保存更新后的数据
+        with open(json_path, 'w') as f:
+            json.dump(existing_data, f, indent=4)
+        
+        print(f"已将矩形数据追加到: {json_path} (当前矩形数: {len(existing_data)})")
+        return jsonify(ans_point)
+    except Exception as e:
+        print(f"处理矩形时出错: {e}")
+        return jsonify({'error': f'处理矩形时出错: {str(e)}'}), 500
 
 
 @app.route('/api/images')
@@ -365,16 +410,16 @@ if __name__ == '__main__':
     def open_browser():
         """延迟打开浏览器的函数"""
         time.sleep(1.5)
-        webbrowser.open('http://localhost:5000')
-        print("已自动打开浏览器访问: http://localhost:5000")
+        webbrowser.open('http://0.0.0.0:5000')
+        print("已自动打开浏览器访问: http://0.0.0.0:5000")
 
     if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
         threading.Thread(target=open_browser, daemon=True).start()
 
     print("正在启动Flask服务器...")
-    print("服务器将在 http://localhost:5000 运行")
+    print("服务器将在 http://0.0.0.0:5000 运行")
 
-    server_thread = threading.Thread(target=app.run, kwargs={'host': 'localhost', 'port': 5000})
+    server_thread = threading.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5000})
     server_thread.daemon = True
     server_thread.start()
     shutdown_event.wait()

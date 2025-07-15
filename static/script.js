@@ -199,7 +199,7 @@ async function saveCoordinates() {
 
 // 页面关闭前向后端发送退出请求
 window.addEventListener('beforeunload', function(e) {
-    fetch('http://localhost:5000/shutdown', {
+    fetch('http://0.0.0.0:5000/shutdown', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'shutdown' })
@@ -277,153 +277,7 @@ async function navigateImage_prevBtn(delta) {
     await loadImage(nextIndex);
 }
 
-// 下一张图像导航函数，显示模态框确认
-async function navigateImage_nextBtn(delta) {
-    const elementCount = {};
-    coordinates.forEach(coord => {
-        if (coord && typeof coord[2] === 'number') {
-            const element = coord[2];
-            elementCount[element] = (elementCount[element] || 0) + 1;
-        }
-    });
-
-    const modal = document.createElement('div');
-    modal.classList.add('fixed', 'top-1/2', 'left-1/2', '-translate-x-1/2', '-translate-y-1/2', 'bg-white', 'p-6', 'rounded-lg', 'shadow-lg', 'z-50', 'transform', 'opacity-0', 'transition-all', 'duration-300', 'ease-out');
-
-    const content = document.createElement('div');
-    for (const [element, count] of Object.entries(elementCount)) {
-        const p = document.createElement('p');
-        p.textContent = `靶标${element}, 标注数量 ${count}`;
-        p.classList.add('mb-2', 'text-gray-700');
-        content.appendChild(p);
-    }
-    modal.appendChild(content);
-
-    const buttonContainer = document.createElement('div');
-    buttonContainer.classList.add('flex', 'justify-end', 'mt-4');
-
-    const confirmButton = document.createElement('button');
-    confirmButton.textContent = '确定';
-    confirmButton.classList.add('px-4', 'py-2', 'bg-green-500', 'text-white', 'rounded-md', 'mr-2', 'hover:bg-green-600', 'focus:outline-none', 'focus:ring-2', 'focus:ring-green-400', 'focus:ring-opacity-50');
-    confirmButton.addEventListener('click', async () => {
-        await saveCoordinates();
-        let nextIndex = currentIndex + delta;
-        if (nextIndex < 0) {
-            nextIndex = imageFiles.length - 1;
-        } else if (nextIndex >= imageFiles.length) {
-            nextIndex = 0;
-        }
-        coordinates = [];
-        await loadImage(nextIndex);
-        modal.remove();
-    });
-    buttonContainer.appendChild(confirmButton);
-
-    const cancelButton = document.createElement('button');
-    cancelButton.textContent = '取消';
-    cancelButton.classList.add('px-4', 'py-2', 'bg-red-500', 'text-white', 'rounded-md', 'hover:bg-red-600', 'focus:outline-none', 'focus:ring-2', 'focus:ring-red-400', 'focus:ring-opacity-50');
-    cancelButton.addEventListener('click', () => modal.remove());
-    buttonContainer.appendChild(cancelButton);
-
-    modal.appendChild(buttonContainer);
-    document.body.appendChild(modal);
-    void modal.offsetWidth;
-    modal.classList.add('opacity-100');
-}
-// // 合并的鼠标按下事件处理器，处理左键标注和中键拖拽
-// canvas.addEventListener('mousedown', async (event) => {
-//     if (event.button === 1) { // 鼠标中键按钮代码为 1
-//         event.preventDefault();
-//         isPanning = true;
-//         lastPanX = event.clientX;
-//         lastPanY = event.clientY;
-//         canvas.style.cursor = 'move';
-//         return;
-//     }
-//     if (event.button === 2) { // 鼠标右键删除标记
-//         if (coordinates.length > 0 && !(coordinates.length === 1 && coordinates[0] === null)) {
-//             const rect = canvas.getBoundingClientRect();
-//             const devicePixelRatio = window.devicePixelRatio || 1;
-//             const clickCanvasX = (event.clientX - rect.left) * devicePixelRatio;
-//             const clickCanvasY = (event.clientY - rect.top) * devicePixelRatio;
-//
-//             let minDistance = Infinity;
-//             let closestIndex = -1;
-//
-//             coordinates.forEach((coord, index) => {
-//                 if (coord && typeof coord[0] === 'number' && typeof coord[1] === 'number') {
-//                     const canvasX = imageDrawInfo.x + coord[0] * imageDrawInfo.scale;
-//                     const canvasY = imageDrawInfo.y + coord[1] * imageDrawInfo.scale;
-//                     const distance = Math.sqrt((canvasX - clickCanvasX) ** 2 + (canvasY - clickCanvasY) ** 2);
-//                     if (distance < minDistance) {
-//                         minDistance = distance;
-//                         closestIndex = index;
-//                     }
-//                 }
-//             });
-//
-//             if (closestIndex !== -1) {
-//                 coordinates.splice(closestIndex, 1);
-//                 if (coordinates.length === 0) {
-//                     coordinates.push(null);
-//                 }
-//                 drawAnnotations();
-//                 await saveCoordinates();
-//                 updateUI();
-//                 showMessage('距离最近的标记已删除。', 'info');
-//             }
-//         } else {
-//             showMessage('没有可删除的标记。', 'info');
-//         }
-//         return;
-//     }
-//     if (event.button !== 0) return;
-//
-//     const rect = canvas.getBoundingClientRect();
-//     const devicePixelRatio = window.devicePixelRatio || 1;
-//     const clickCanvasX = (event.clientX - rect.left) * devicePixelRatio;
-//     const clickCanvasY = (event.clientY - rect.top) * devicePixelRatio;
-//
-//     const isClickInsideImageDrawArea =
-//         clickCanvasX >= imageDrawInfo.x &&
-//         clickCanvasX <= (imageDrawInfo.x + imageDrawInfo.width) &&
-//         clickCanvasY >= imageDrawInfo.y &&
-//         clickCanvasY <= (imageDrawInfo.y + imageDrawInfo.height);
-//
-//     if (isClickInsideImageDrawArea) {
-//         const imgX = Math.round((clickCanvasX - imageDrawInfo.x) / imageDrawInfo.scale);
-//         const imgY = Math.round((clickCanvasY - imageDrawInfo.y) / imageDrawInfo.scale);
-//         if (imgX >= 0 && imgX < originalImageDimensions.width &&
-//             imgY >= 0 && imgY < originalImageDimensions.height) {
-//             const targetNumber = prompt('请输入靶标编号 (数字):');
-//             if (targetNumber === null) {
-//                 // showMessage('标注已取消', 'info');
-//                 return;
-//             }
-//             const targetNum = parseInt(targetNumber);
-//             if (isNaN(targetNum) || targetNum <= 0 || targetNum > 9) {
-//                 showMessage('请输入在范围1~9的整数', 'error');
-//                 return;
-//             }
-//             if (coordinates.length === 1 && coordinates[0] === null) {
-//                 coordinates = [];
-//             }
-//             coordinates.push([imgX, imgY, targetNum]);
-//             drawAnnotations();
-//             await saveCoordinates();
-//             updateUI();
-//             // showMessage(`坐标已记录: X ${imgX}, Y ${imgY}, 靶标 ${targetNum}`, 'success');
-//         } else {
-//             showMessage('点击位置超出图片边界。', 'info');
-//         }
-//     } else {
-//         showMessage('点击区域不在图像内。请直接点击图像。', 'info');
-//     }
-// });
-// 新增全局变量
-// 新增变量，用于标记是否处于绘制矩形框模式
-
-let isDrawingRectangle = false;
+let isDrawingRectangle = true;
 let rectangleStart = null;
 let rectangleEnd = null;
 
@@ -431,13 +285,14 @@ let rectangleEnd = null;
 document.addEventListener('keydown', (event) => {
     if (event.key === 'z' || event.key === 'Z') {
         undoBtn.click();
-    } else if (event.key === 'ArrowLeft') {
+    }
+    else if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        prevBtn.click();
-    } else if (event.key === 'ArrowRight') {
+        prevBtn.click();}
+    else if (event.key === 'ArrowRight') {
         event.preventDefault();
-        nextBtn.click();
-    } else if (event.key === 'q' || event.key === 'Q') {
+        nextBtn.click();}
+    else if (event.key === 'q' || event.key === 'Q') {
         quitBtn.click();
     } else if (event.key === 'r' || event.key === 'R') {
         event.preventDefault();
@@ -702,7 +557,7 @@ document.addEventListener('contextmenu', function(event) {
 
 // 导航按钮事件
 prevBtn.addEventListener('click', () => navigateImage_prevBtn(-1));
-nextBtn.addEventListener('click', () => navigateImage_nextBtn(1));
+nextBtn.addEventListener('click', () => navigateImage_prevBtn(1));
 
 // 撤销按钮事件
 undoBtn.addEventListener('click', async () => {
@@ -759,27 +614,27 @@ originalQuitHandler = () => {
 quitBtn.addEventListener('click', originalQuitHandler);
 
 // 键盘快捷键事件
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'z' || event.key === 'Z') {
-        undoBtn.click();
-    } else if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        prevBtn.click();
-    } else if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        nextBtn.click();
-    } else if (event.key === 'q' || event.key === 'Q') {
-        quitBtn.click();
-    } else if (event.key === 'r' || event.key === 'R') {
-        event.preventDefault();
-        zoomScale = 1.0;
-        panOffsetX = 0;
-        panOffsetY = 0;
-        updateCanvasSizeAndOffsets();
-        drawAnnotations();
-        showMessage('缩放和平移已重置', 'info');
-    }
-});
+// document.addEventListener('keydown', (event) => {
+//     if (event.key === 'z' || event.key === 'Z') {
+//         undoBtn.click();
+//     } else if (event.key === 'ArrowLeft') {
+//         event.preventDefault();
+//         prevBtn.click();
+//     } else if (event.key === 'ArrowRight') {
+//         event.preventDefault();
+//         nextBtn.click();
+//     } else if (event.key === 'q' || event.key === 'Q') {
+//         quitBtn.click();
+//     } else if (event.key === 'r' || event.key === 'R') {
+//         event.preventDefault();
+//         zoomScale = 1.0;
+//         panOffsetX = 0;
+//         panOffsetY = 0;
+//         updateCanvasSizeAndOffsets();
+//         drawAnnotations();
+//         showMessage('缩放和平移已重置', 'info');
+//     }
+// });
 
 // 窗口大小改变事件，保持画布响应式
 window.addEventListener('resize', () => {

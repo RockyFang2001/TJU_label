@@ -26,7 +26,7 @@ def replace_background_with_green(img):
     mask_white = cv2.inRange(hsv, lower_white, upper_white)
     
     lower_black = np.array([0, 0, 0])
-    upper_black = np.array([180, 255, 30])
+    upper_black = np.array([180, 255, 255])
     mask_black = cv2.inRange(hsv, lower_black, upper_black)
     
     mask_target = cv2.bitwise_or(mask_white, mask_black)
@@ -76,14 +76,16 @@ def auto_detect_corners(image, region_vertices):
 
     # 2. 灰度化和自适应二值化
     gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-
+    clahe = cv2.createCLAHE(clipLimit=2.0,tileGridSize=(8,8))
+    enhanced = clahe.apply(gray)
     # 5. 在矫正后图像中检测棋盘格角点
     pattern_size = (3, 3)  # 4x4棋盘格有5x5个交点
     
-    ret, corners = cv2.findChessboardCorners(gray, pattern_size, None)
-    print(f"检测到的角点数量: {len(corners)}")
+    ret, corners = cv2.findChessboardCorners(enhanced, pattern_size, None)
+    # print(f"检测到的角点数量: {len(corners)}")
     if not ret:
-        raise RuntimeError("无法自动检测棋盘格角点，请检查图像质量")
+        print("检测角点失败")
+        return None
     
     # 精确定位角点
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)

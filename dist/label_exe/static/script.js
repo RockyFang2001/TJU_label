@@ -199,7 +199,7 @@ async function saveCoordinates() {
 
 // 页面关闭前向后端发送退出请求
 window.addEventListener('beforeunload', function(e) {
-    fetch('http://localhost:5000/shutdown', {
+    fetch('http://0.0.0.0:5000/shutdown', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'shutdown' })
